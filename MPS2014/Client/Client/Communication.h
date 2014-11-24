@@ -10,46 +10,40 @@ class Communication
 {
 	void *context;
 	void *requester;
-	void *requester2;
 
 public:
-	Communication()
+	Communication(char *echipa, char *nume)
 	{
-		printf ("Connecting to hello world server…\n");
+		printf ("%s from %s is connecting to the MPS server…\n", nume, echipa);
 		context = zmq_ctx_new ();
 		requester = zmq_socket (context, ZMQ_REQ);
 		zmq_connect (requester, "tcp://localhost:5555");
 
-		requester2 = zmq_socket (context, ZMQ_REQ);
-		zmq_connect (requester2, "tcp://localhost:5555");
 
-		int request_nbr;
-		for (request_nbr = 0; request_nbr != 10; request_nbr++) 
-		{
-			char buffer [10];
-			char buffer2 [10];
-			printf ("1 Sending %s\n", "Hello1");
-			zmq_send (requester, "Hello1", 7, 0);
-			printf ("2 Sending %s\n", "Hello2");
-			zmq_send (requester2, "Hello2", 7, 0);
+		//talking
+		std::string s;
+		s.append(echipa);
+		s.append(":");
+		s.append(nume);
 
-			zmq_recv (requester, buffer, 10, 0);
-			printf ("1 Received:%s\n", buffer);
-			zmq_recv (requester2, buffer2, 10, 0);
-			printf ("2 Received:%s\n", buffer2);
+		char buffer[1024];
+
+			printf ("%s Sending %s\n", s.c_str(),  s.c_str());
+			zmq_send (requester, s.c_str(), s.length()+1, 0);
+
+			zmq_recv (requester, buffer, 1024, 0);
+			printf ("%s Received:%s\n", s.c_str(), buffer);
 			mySleep(1000);
-		}
 	}
 
 	~Communication()
 	{
-		int err=EINTR;
-		//TO DO: maybe better options to deal with non closing context
-		do
-		{
+	
+		//TO DO: test for closing
+
 			zmq_close (requester);
 			zmq_ctx_destroy (context);
-		}while(err==EINTR);
+
 	}
 
 

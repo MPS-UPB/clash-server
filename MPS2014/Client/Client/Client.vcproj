@@ -136,7 +136,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="libzmq-v90-mt-4_0_4.lib"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="../../Libraries/zeromq/lib"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"

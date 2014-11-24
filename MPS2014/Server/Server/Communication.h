@@ -20,15 +20,16 @@ public:
 		int rc = zmq_bind (responder, "tcp://*:5555");
 		assert (rc == 0);
 
+		std::cout<<"Waiting for incomming connections.\n";
+
 		while (1) 
 		{
-			char buffer [10];
-			zmq_recv (responder, buffer, 10, 0);
-			printf ("Received: %s\n", buffer);
+			char buffer [1024];
+			zmq_recv (responder, buffer, 1024, 0);
+			printf ("SERVER Received: %s\n", buffer);
 			mySleep (1);
+			printf ("SERVER sending: %s\n", buffer);
 			zmq_send (responder, buffer, strlen(buffer)+1, 0);
-			mySleep (100);
-			zmq_send (responder, "test", 5, 0);
 		}
 	}
 
