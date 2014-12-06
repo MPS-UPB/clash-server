@@ -11,9 +11,9 @@ class Communication
 private:
 	//communication chanel
 	void *context_query;
-	//socket for askeing the server
+	//socket for asking the server
 	void *socket_query;
-	//socket for receiving information from the server
+	//socket for receiving indications from server
 	void *socket_command;
 
 public:
@@ -22,6 +22,10 @@ public:
 	Probably won't have parameters in lter versions.
 	*/
 	Communication(char *echipa, char *nume);
+	//---- cere serverului sa ii dea init.
+	//---- serverul asteapta de la loader sa ii dea OK-ul
+	//---- loaderul porneste clientii si cand termina trimite OK la server
+	//---- cand serverul primeste OK-ul de la loader, raspunde la clienti
 
 	/**
 	This function gets called when everything is ready.
@@ -147,6 +151,10 @@ public:
 	Destructor. Closes communication channels.
 	*/
 	~Communication();
+};
+
+class test
+{
 };
 
 #endif

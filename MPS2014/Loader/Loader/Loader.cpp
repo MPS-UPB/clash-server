@@ -11,14 +11,17 @@
 #include <tchar.h>
 
 
-PROCESS_INFORMATION RunTest(TCHAR *AppName, TCHAR *CmdLine)
+void *context;
+void *server_socker;
+
+PROCESS_INFORMATION runProcess(TCHAR *AppName, TCHAR *CmdLine)
 {
 	printf("Running Program: ");
     printf("%s ", AppName);
 	if(CmdLine!=NULL)
 		printf("%s\n", CmdLine);
 	else
-		printf("\n", CmdLine);
+		printf("\n");
 
     PROCESS_INFORMATION processInformation;
     STARTUPINFO startupInfo;
@@ -52,36 +55,52 @@ void startServer(TCHAR *name, TCHAR *params)
 {
 	PROCESS_INFORMATION processInformation;
 
-	processInformation=RunTest(name, params);
+	processInformation=runProcess(name, params);
 
 	/*WaitForSingleObject( processInformation.hProcess, INFINITE );
     CloseHandle( processInformation.hProcess );
     CloseHandle( processInformation.hThread );*/
 }
 
-void startCommunication(void **context_voidpp, void **responder_voidpp)
+void startCommunication()
 {
-	void *context=*context_voidpp;
-	void *requester=*responder_voidpp;
-
-	printf ("Connecting to hello world server…\n");
+	//connect
+	printf ("Connecting to MPS Server…\n");
 	context = zmq_ctx_new ();
-	requester = zmq_socket (context, ZMQ_REQ);
-	zmq_connect (requester, "tcp://localhost:5555");
+	server_socker = zmq_socket (context, ZMQ_REQ);
+	zmq_connect (server_socker, "tcp://localhost:5555");
 
-	int request_nbr;
-	for (request_nbr = 0; request_nbr != 1; request_nbr++) 
-	{
-		char buffer [10];
+	//Say hello and wait for answer
+	char buffer[20];
+	strcpy_s(buffer, 20, "Hello from Loader!");
+	zmq_send (server_socker, buffer, strlen(buffer)+1, 0);
 
-		printf ("1 Sending %s\n", "Hello1");
-		zmq_send (requester, "Hello1", 7, 0);
+	zmq_recv (server_socker, buffer, 10, 0);
+	printf ("%s\n", buffer);
+}
 
-		zmq_recv (requester, buffer, 10, 0);
-		printf ("1 Received:%s\n", buffer);
+void connectPawnToServer(char *team, char *name, int pid)
+{
+	char buffer[1024];
+	sprintf_s(buffer, 1024, "connect pawn: %d %s:%s", pid, team, name);
 
-		mySleep(1000);
-	}
+	printf ("LOADER: Connecting %s to the server...\n", buffer);
+	zmq_send (server_socker, buffer, strlen(buffer)+1, 0);
+
+	zmq_recv (server_socker, buffer, 10, 0);
+	printf ("LOADER: Received: %s\n", buffer);
+}
+
+void startRound()
+{
+	char buffer[1024];
+	sprintf_s(buffer, 1024, "start round:");
+
+	printf("LOADER: Starting Round");
+	zmq_send(server_socker, buffer, strlen(buffer) + 1, 0);
+
+	zmq_recv(server_socker, buffer, 10, 0);
+	printf("LOADER: Received: %s\n", buffer);
 }
 
 void startClients()
@@ -143,7 +162,8 @@ void startClients()
 						strcat_s(cmd_line, MAX_PATH, "\"");
 
 
-						RunTest(crt_pawn, cmd_line);
+						PROCESS_INFORMATION pi=runProcess(crt_pawn, cmd_line);
+						connectPawnToServer(found_files.cFileName, found_pawns.cFileName, pi.dwProcessId);
 					}
 				}
 			}
@@ -157,16 +177,13 @@ void startClients()
 	assert(dwError != ERROR_NO_MORE_FILES, "Cannot read pawns directory!");
 
 	FindClose(hFind);
+
+	startRound();
 }
 
 void main()
 {
-	void *context;
-	void *responder;
-
 	startServer(TEXT("Server.exe"), NULL);
+	startCommunication();
 	startClients();
-	//startCommunication(&context, &responder);
-
-	
 }
