@@ -15,7 +15,7 @@ Pawn::Pawn(int pid, const char *team, const char *name)
 	id=(char*)malloc(sizeof(char)*(dim));
 	strcpy_s(id, dim, team);
 	strcat_s(id, dim, ":");
-	strcat_s(id, dim, team);
+	strcat_s(id, dim, name);
 }
 
 Pawn::~Pawn()

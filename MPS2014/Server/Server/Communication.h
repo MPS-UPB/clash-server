@@ -25,12 +25,12 @@ private:
 	public:
 		bool operator()(const std::string &x, const std::string &y) const
 		{ 
-			unsigned int lx=x.length();
-			if(lx<y.length())
-				return false;
+			//unsigned int lx=x.length();
+			//if(lx<y.length())
+				//return false;
 
 			// returns x>y
-			return x.compare(0, lx, y.c_str(), lx)>0;
+			return x<y;//x.compare(0, lx, y.c_str(), lx)<0;
 		} 
 	};
 

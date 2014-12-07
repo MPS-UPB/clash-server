@@ -14,12 +14,24 @@
 void *context;
 void *server_socker;
 
-PROCESS_INFORMATION runProcess(TCHAR *AppName, TCHAR *CmdLine)
+PROCESS_INFORMATION runProcess(char *AppName_c, char *CmdLine_c)
 {
-	printf("Running Program: ");
-    printf("%s ", AppName);
+
+	WCHAR AppName[1024], CmdLine[1024];
+
+	//MultiByteToWideChar( 0,0, AppName_c, -1, AppName, 1024);
+	//MultiByteToWideChar( 0,0, CmdLine_c, -1, CmdLine, 1024);
+
+	toWchar(AppName_c, AppName, 1024);
+	toWchar(CmdLine_c, CmdLine, 1024);
+
+	char buffer[1024];
+
+
+	printf("LOADER: Running Program: ");
+    printf("%s ", toChar(AppName, buffer, 1024));
 	if(CmdLine!=NULL)
-		printf("%s\n", CmdLine);
+		printf("%s\n", toChar(CmdLine, buffer, 1024));
 	else
 		printf("\n");
 
@@ -43,7 +55,7 @@ PROCESS_INFORMATION runProcess(TCHAR *AppName, TCHAR *CmdLine)
 
     if (result == 0)
     {
-        wprintf(L"ERROR: CreateProcess failed!");
+		printf("LOADER: ERROR: CreateProcess failed!\n");
     }
 
 	return processInformation;
@@ -51,7 +63,7 @@ PROCESS_INFORMATION runProcess(TCHAR *AppName, TCHAR *CmdLine)
 
 
 
-void startServer(TCHAR *name, TCHAR *params)
+void startServer(char *name, char *params)
 {
 	PROCESS_INFORMATION processInformation;
 
@@ -65,29 +77,30 @@ void startServer(TCHAR *name, TCHAR *params)
 void startCommunication()
 {
 	//connect
-	printf ("Connecting to MPS Server…\n");
+	printf ("LOADER: Connecting to MPS Server...\n");
 	context = zmq_ctx_new ();
 	server_socker = zmq_socket (context, ZMQ_REQ);
 	zmq_connect (server_socker, "tcp://localhost:5555");
 
 	//Say hello and wait for answer
-	char buffer[20];
-	strcpy_s(buffer, 20, "Hello from Loader!");
+	char buffer[1024];
+	strcpy_s(buffer, 1024, "Hello from Loader!");
+	printf ("LOADER: Sending: %s\n", buffer);
 	zmq_send (server_socker, buffer, strlen(buffer)+1, 0);
 
-	zmq_recv (server_socker, buffer, 10, 0);
-	printf ("%s\n", buffer);
+	zmq_recv (server_socker, buffer, 1024, 0);
+	printf ("LOADER: Received: %s\n", buffer);
 }
 
 void connectPawnToServer(char *team, char *name, int pid)
 {
 	char buffer[1024];
-	sprintf_s(buffer, 1024, "connect pawn: %d %s:%s", pid, team, name);
+	sprintf_s(buffer, 1024, "connect pawn: %d:%s:%s", pid, team, name);
 
-	printf ("LOADER: Connecting %s to the server...\n", buffer);
+	printf ("LOADER: Sending: %s\n", buffer);
 	zmq_send (server_socker, buffer, strlen(buffer)+1, 0);
 
-	zmq_recv (server_socker, buffer, 10, 0);
+	zmq_recv (server_socker, buffer, 1024, 0);
 	printf ("LOADER: Received: %s\n", buffer);
 }
 
@@ -96,25 +109,28 @@ void startRound()
 	char buffer[1024];
 	sprintf_s(buffer, 1024, "start round:");
 
-	printf("LOADER: Starting Round");
+	printf("LOADER: Sending: %s\n", buffer);
 	zmq_send(server_socker, buffer, strlen(buffer) + 1, 0);
 
-	zmq_recv(server_socker, buffer, 10, 0);
+	zmq_recv(server_socker, buffer, 1024, 0);
 	printf("LOADER: Received: %s\n", buffer);
 }
 
 void startClients()
 {
+	char buffer[MAX_PATH];
 	WIN32_FIND_DATA found_files;
-	TCHAR crt_directory[MAX_PATH];
+	char crt_directory[MAX_PATH];
+	WCHAR crt_directory_w[MAX_PATH];
 	HANDLE hFind = INVALID_HANDLE_VALUE;
 
 	WIN32_FIND_DATA found_pawns;
-	TCHAR crt_team[MAX_PATH];
+	char crt_team[MAX_PATH];
+	WCHAR crt_team_w[MAX_PATH];
 	HANDLE hPawn = INVALID_HANDLE_VALUE;
 
-	TCHAR crt_pawn[MAX_PATH];
-	TCHAR cmd_line[MAX_PATH];
+	char crt_pawn[MAX_PATH];
+	char cmd_line[MAX_PATH];
 
 	DWORD dwError=0;
 
@@ -122,59 +138,67 @@ void startClients()
 	strcpy_s(crt_directory, MAX_PATH, ".\\Teams\\*");
 
 	// Find the first file in the directory.
-	hFind = FindFirstFile(crt_directory, &found_files);
-	assert(INVALID_HANDLE_VALUE != hFind, "Cannot open pawns directory!");
+	hFind = FindFirstFile(toWchar(crt_directory, crt_directory_w, 1024), &found_files);
+	assert(INVALID_HANDLE_VALUE != hFind, "LOADER: Cannot open pawns directory!\n");
 
 	//List all teams
 	do
 	{
 		if (found_files.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY && found_files.cFileName[0]!='.')
 		{
-			printf("Team: %s\n", found_files.cFileName);
+			//printf("Team: %s\n", found_files.cFileName);
 
 			//Find all pawns in team
 			strcpy_s(crt_team, MAX_PATH, ".\\Teams\\");
-			strcat_s(crt_team, MAX_PATH, found_files.cFileName);
+			strcat_s(crt_team, MAX_PATH, toChar(found_files.cFileName, buffer, MAX_PATH));
 			strcat_s(crt_team, MAX_PATH, "\\*");
 
-			hPawn = FindFirstFile(crt_team, &found_pawns);
-			assert(INVALID_HANDLE_VALUE != hPawn, "Cannot open team directory!");
+			hPawn = FindFirstFile(toWchar(crt_team, crt_team_w, MAX_PATH), &found_pawns);
+			assert(INVALID_HANDLE_VALUE != hPawn, "LOADER: Cannot open team directory!\n");
 
 			//List all members in the teams
 			do
 			{
 				if ((!(found_pawns.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)))
 				{
-					if(strncmp(&found_pawns.cFileName[strlen(found_pawns.cFileName)-4], ".exe", 4)==0)
+					char *cFileName=toChar(found_pawns.cFileName, buffer, MAX_PATH);
+					if(strncmp(&cFileName[strlen(cFileName)-4], ".exe", 4)==0)
 					{
-						printf("\t%s\n", found_pawns.cFileName);
+						//printf("\t%s\n", found_pawns.cFileName);
 
 						//starting pawn
 						strcpy_s(crt_pawn, MAX_PATH, ".\\Teams\\");
-						strcat_s(crt_pawn, MAX_PATH, found_files.cFileName);
+						strcat_s(crt_pawn, MAX_PATH, toChar(found_files.cFileName, buffer, MAX_PATH));
 						strcat_s(crt_pawn, MAX_PATH, "\\");
-						strcat_s(crt_pawn, MAX_PATH, found_pawns.cFileName);
+						strcat_s(crt_pawn, MAX_PATH, toChar(found_pawns.cFileName, buffer, MAX_PATH));
 
 						strcpy_s(cmd_line, MAX_PATH, "\"");
-						strcat_s(cmd_line, MAX_PATH, found_files.cFileName);
+						strcat_s(cmd_line, MAX_PATH, toChar(found_files.cFileName, buffer, MAX_PATH));
 						strcat_s(cmd_line, MAX_PATH, "\" \"");
-						strcat_s(cmd_line, MAX_PATH, found_pawns.cFileName);
+						strcat_s(cmd_line, MAX_PATH, toChar(found_pawns.cFileName, buffer, MAX_PATH));
 						strcat_s(cmd_line, MAX_PATH, "\"");
 
 
 						PROCESS_INFORMATION pi=runProcess(crt_pawn, cmd_line);
-						connectPawnToServer(found_files.cFileName, found_pawns.cFileName, pi.dwProcessId);
+
+						//connecting pawn to server
+						char name[1024], team[1024];
+						toChar(found_files.cFileName, team, 1024);
+						toChar(found_pawns.cFileName, name, 1024);
+
+						//printf("Connecting pawn: %s %s\n", team, name);
+						connectPawnToServer(team, name, pi.dwProcessId);
 					}
 				}
 			}
 			while (FindNextFile(hPawn, &found_pawns) != 0);
-			assert(dwError != ERROR_NO_MORE_FILES, "Cannot read team directory!");
+			assert(dwError != ERROR_NO_MORE_FILES, "LOADER: Cannot read team directory!\n");
 			FindClose(hPawn);
 		}
 	}
 	while (FindNextFile(hFind, &found_files) != 0);
 
-	assert(dwError != ERROR_NO_MORE_FILES, "Cannot read pawns directory!");
+	assert(dwError != ERROR_NO_MORE_FILES, "LOADER: Cannot read pawns directory!\n");
 
 	FindClose(hFind);
 
@@ -183,7 +207,9 @@ void startClients()
 
 void main()
 {
-	startServer(TEXT("Server.exe"), NULL);
+	startServer("Server.exe", NULL);
 	startCommunication();
 	startClients();
+
+	printf("LOADER: Loader Exiting.\n");
 }

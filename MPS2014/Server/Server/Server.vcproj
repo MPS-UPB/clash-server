@@ -177,7 +177,23 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\Communication.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Game.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Pawn.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Server.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\util.cpp"
 				>
 			</File>
 		</Filter>
@@ -188,6 +204,14 @@
 			>
 			<File
 				RelativePath=".\Communication.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Game.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Pawn.h"
 				>
 			</File>
 			<File

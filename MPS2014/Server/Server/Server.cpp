@@ -6,31 +6,21 @@
 
 Communication com;
 
-std::string connect_pawn(std::string msg)
+//TO DO: use something else than strtok
+std::string connect_pawn(std::string msgs)
 {
 	int pid;
 	std::string name, team;
-	
-	int start, stop;
 
-	//read command
-	start=msg.find(':');
-	stop = msg.find(':', start + 1);
+	char *msg=_strdup(msgs.c_str());
+	int len=strlen(msg);
+	char *context=NULL;
 
-	//read pid
-	start = stop;
-	stop = msg.find(':', start + 1);
-	pid = atoi(msg.substr(start + 1, stop - start).c_str());
+	char *split=strtok_s(msg, ":", &context);
 
-	//read team
-	start = stop;
-	stop = msg.find(':', start + 1);
-	team=msg.substr(start + 1, stop - start);
-
-	//read name
-	start = stop;
-	stop = msg.find(':', start + 1);
-	name = msg.substr(start + 1, stop - start);
+	pid=atoi(strtok_s(NULL, ":", &context));
+	team=std::string(strtok_s(NULL, ":", &context));
+	name=std::string(strtok_s(NULL, ":", &context));
 
 	Game *game = Game::getInstance();
 	game->addUser(pid, team.c_str(), name.c_str());
@@ -39,6 +29,8 @@ std::string connect_pawn(std::string msg)
 	ret.append(team);
 	ret.append(":");
 	ret.append(name);
+
+	free(msg);
 
 	return ret;
 }
@@ -55,9 +47,13 @@ int main()
 {
 	std::cout<<"MPS Server Started.\n";
 
+	Game *game = Game::getInstance();
+	game->addUser(544, "retfsdvds", "asfsdvdfgdf");
+
 	
 	com.addListener("connect pawn:", connect_pawn);
 	com.addListener("start round:", start_round);
+	com.startListening();
 	com.listeningLoop();
 
 	return 0;				
