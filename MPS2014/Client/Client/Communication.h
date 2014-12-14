@@ -94,6 +94,13 @@ public:
 	@param message_id the id returned by the function sendMessage()
 	*/
 	void messageFailed(std::string pawn_id, int message_id);
+	
+	/**
+	 * The server calls this function when someone sends a message tp you.
+	 * Ypu have to override ot in order tomreceove messages.
+	 */
+	 
+	 void receiveMessage(std::string sender_id, std::string message);
 
 	/**
 	Returns the id of a pawn occupying the respective cell if it will not be empty at the
