@@ -113,6 +113,11 @@ public:
 	@return a string in the form of an id: "team:name" of the occupier, or ""
 	*/
 	std::string getCellState(int x, int y, int time);
+	
+	/**
+	 * Returns the size of the board edge. The board is square.
+	 */
+	int getBoardSize();
 
 	/**
 	Returns the path of a pawn from the starting time t1 till t2. If the player didn't offer 
