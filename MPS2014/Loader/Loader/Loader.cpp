@@ -19,9 +19,6 @@ PROCESS_INFORMATION runProcess(char *AppName_c, char *CmdLine_c)
 
 	WCHAR AppName[1024], CmdLine[1024];
 
-	//MultiByteToWideChar( 0,0, AppName_c, -1, AppName, 1024);
-	//MultiByteToWideChar( 0,0, CmdLine_c, -1, CmdLine, 1024);
-
 	toWchar(AppName_c, AppName, 1024);
 	toWchar(CmdLine_c, CmdLine, 1024);
 
@@ -84,7 +81,7 @@ void startCommunication()
 
 	//Say hello and wait for answer
 	char buffer[1024];
-	strcpy_s(buffer, 1024, "Hello from Loader!");
+	strcpy_s(buffer, 1024, "hello:");
 	printf ("LOADER: Sending: %s\n", buffer);
 	zmq_send (server_socker, buffer, strlen(buffer)+1, 0);
 
