@@ -1,5 +1,5 @@
 #include <iostream>
-#include "Communication\ComServer.h"
+#include "Mailman\ComServer.h"
 #include "Game.h"
 #include<string>
 #include <string.h>
