@@ -1,28 +1,9 @@
 #include "Communication.h"
 
-Communication::Communication(char *echipa, char *nume)
+
+Communication::Communication() : com_requests("tcp://localhost:5555", 0)
 {
-	//Connect to the server
-	printf ("%s from %s is connecting to the MPS server…\n", nume, echipa);
-	context_query = zmq_ctx_new ();
-	socket_query = zmq_socket (context_query, ZMQ_REQ);
-	zmq_connect (socket_query, "tcp://localhost:5555");
-
-	//Create ID message
-	std::string s;
-	s.append(echipa);
-	s.append(":");
-	s.append(nume);
-
-	//Send ID message and receive OK
-	char buffer[1024];
-
-	printf ("%s Sending %s\n", s.c_str(),  s.c_str());
-	zmq_send (socket_query, s.c_str(), s.length()+1, 0);
-
-	zmq_recv (socket_query, buffer, 1024, 0);
-	printf ("%s Received:%s\n", s.c_str(), buffer);
-	mySleep(1000);
+	
 }
 
 Communication::~Communication()
@@ -31,3 +12,95 @@ Communication::~Communication()
 	zmq_close (socket_query);
 	zmq_ctx_destroy (context_query);
 }
+
+
+
+void Communication::init() 
+{
+	//Override
+}
+
+
+void Communication::start()
+{
+	//Override
+}
+
+
+void Communication::stop()
+{
+	//Override
+}
+
+
+void Communication::wantToContinue()
+{
+	//Override
+}
+
+
+void Communication::doContinue()
+{
+
+}
+
+
+void Communication::sendPath(std::string path)
+{
+
+}
+
+
+int Communication::sendMessage(std::string message, std::string id)
+{
+	return 0;
+}
+
+
+void Communication::messageFailed(std::string pawn_id, int message_id)
+{
+	//Override
+}
+
+
+void Communication::receiveMessage(std::string sender_id, std::string message)
+{
+	//Override
+}
+
+
+std::string Communication::getCellState(int x, int y, int time)
+{
+	return std::string();
+}
+
+
+int Communication::getBoardSize()
+{
+	return 13;
+}
+
+
+std::string Communication::getPath(std::string id, int t1, int t2)
+{
+	return std::string();
+}
+
+
+std::string Communication::getPosition(std::string id)
+{
+	return std::string();
+}
+
+
+std::string Communication::getGrade(std::string id)
+{
+	return std::string();
+}
+
+
+std::string Communication::getColor(std::string id)
+{
+	return std::string();
+}
+

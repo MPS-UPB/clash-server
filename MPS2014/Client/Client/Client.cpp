@@ -1,7 +1,7 @@
-#include "Communication.h"
+#include "PawnExample.h"
 
-int main(int argc, char *argv[])
+int main()
 {
-	Communication com(argv[0], argv[1]);
+	PawnExample com();
 	return 0;
 }

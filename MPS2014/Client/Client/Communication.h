@@ -4,7 +4,7 @@
 #include "zeromq/include/zmq.h"
 #include <string>
 #include<iostream>
-#include "util.h"
+#include "Mailman\ComClient.h"
 
 class Communication
 {
@@ -16,12 +16,14 @@ private:
 	//socket for receiving indications from server
 	void *socket_command;
 
+	ComClient com_requests;
+
 public:
 	/**
 	Constructor. Initializes communication.
 	Probably won't have parameters in lter versions.
 	*/
-	Communication(char *echipa, char *nume);
+	Communication();
 	//---- cere serverului sa ii dea init.
 	//---- serverul asteapta de la loader sa ii dea OK-ul
 	//---- loaderul porneste clientii si cand termina trimite OK la server
@@ -31,19 +33,19 @@ public:
 	This function gets called when everything is ready.
 	You should override this in order to know when the game starts.
 	*/
-	void init();
+	virtual void init();
 
 	/**
 	This function is called when you can start communicating with the server and pawns.
 	You should override this in order to know when you can move the pawn.
 	*/
-	void start();
+	virtual void start();
 
 	/**
 	This function gets called when the server is no longer listening.
 	You should override this in order to know when the time is up for a move.
 	*/
-	void stop();
+	virtual void stop();
 
 	/**
 	This function is called at the end of a round (when a team wins).
@@ -55,7 +57,7 @@ public:
 	between rounds.	If you do respond, at the beginning of the comming round the method 
 	init() will be called again.
 	*/
-	void wantToContinue();
+	virtual void wantToContinue();
 
 	/**
 	You use this function to answer inside wantToContinue() if you don't want to reset your 
@@ -93,14 +95,14 @@ public:
 	@param pawn_id the id of the pawn that did not answer to the message
 	@param message_id the id returned by the function sendMessage()
 	*/
-	void messageFailed(std::string pawn_id, int message_id);
+	virtual void messageFailed(std::string pawn_id, int message_id);
 	
 	/**
 	 * The server calls this function when someone sends a message tp you.
 	 * Ypu have to override ot in order tomreceove messages.
 	 */
 	 
-	 void receiveMessage(std::string sender_id, std::string message);
+	virtual void receiveMessage(std::string sender_id, std::string message);
 
 	/**
 	Returns the id of a pawn occupying the respective cell if it will not be empty at the
@@ -165,8 +167,5 @@ public:
 	~Communication();
 };
 
-class test
-{
-};
 
 #endif
