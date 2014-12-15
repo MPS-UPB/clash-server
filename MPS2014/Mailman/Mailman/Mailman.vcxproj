@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectName>Communication</ProjectName>
+    <ProjectName>Mailman</ProjectName>
     <ProjectGuid>{010D7933-49C7-484D-BB4B-C26ABE95A269}</ProjectGuid>
     <RootNamespace>Server</RootNamespace>
     <Keyword>Win32Proj</Keyword>
