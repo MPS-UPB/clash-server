@@ -4,16 +4,16 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <ReferencePath>$(ProjectDir);$(ReferencePath)</ReferencePath>
-    <IncludePath>$(WindowsSDK_IncludePath);$(SolutionDir)\Libraries\pthreads\include;$(SolutionDir)\Libraries\zeromq\include;$(VCInstallDir)atlmfc\include;$(VCInstallDir)include;$(IncludePath)</IncludePath>
-    <ExecutablePath>$(OutDir);$(SolutionDir)\Libraries\zeromq\bin;$(SolutionDir)\Libraries\pthreads\dll\x86;$(ExecutablePath)</ExecutablePath>
+    <IncludePath>$(WindowsSDK_IncludePath);$(SolutionDir)\Libraries\freeglut\include;$(SolutionDir)\Libraries\pthreads\include;$(SolutionDir)\Libraries\zeromq\include;$(VCInstallDir)atlmfc\include;$(VCInstallDir)include;$(IncludePath)</IncludePath>
+    <ExecutablePath>$(SolutionDir)\Libraries\freeglut\bin;$(OutDir);$(SolutionDir)\Libraries\zeromq\bin;$(SolutionDir)\Libraries\pthreads\dll\x86;$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Libraries\pthreads\include;$(SolutionDir)\Libraries\zeromq\include;$(SolutionDir)\References;$(SolutionDir)\Libraries;$(SolutionDir)\Projects;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Libraries\freeglut\include;$(SolutionDir)\Libraries\pthreads\include;$(SolutionDir)\Libraries\zeromq\include;$(SolutionDir)\References;$(SolutionDir)\Libraries;$(SolutionDir)\Projects;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(SolutionDir)\Libraries\pthreads\lib\x86;$(OutDir);$(SolutionDir)\Libraries\zeromq\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libzmq-v90-mt-gd-4_0_4.lib;pthreadVCE2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\Libraries\freeglut\lib;$(SolutionDir)\Libraries\pthreads\lib\x86;$(OutDir);$(SolutionDir)\Libraries\zeromq\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libzmq-v90-mt-gd-4_0_4.lib;pthreadVCE2.lib;freeglut.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup />

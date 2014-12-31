@@ -14,6 +14,7 @@
 
 //Used for sending messages to multiple Listeners
 //Doesn't verify for receival -> it's the client's fault that it chrashed
+//protocol: PUB from PUB/SUB
 
 class MAILMAN_API ComBroadcast
 {

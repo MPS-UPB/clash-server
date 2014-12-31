@@ -16,6 +16,7 @@
 
 //Used for receiving messages from a single Broadcast
 //Spawns a new thread that listens in the background
+//protocol: SUB from PUB/SUB
 
 class MAILMAN_API ComListener : public ComInterpreter
 {

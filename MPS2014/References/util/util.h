@@ -20,3 +20,4 @@ void assert(void* err, char* msg = "");
 WCHAR* toWchar(char *text, WCHAR *buffer, int len_buffer);
 
 char* toChar(WCHAR *text, char *buffer, int len_buffer);
+

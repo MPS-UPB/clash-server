@@ -3,11 +3,12 @@
 #include "Game.h"
 #include<string>
 #include <string.h>
+#include "util\Addresses.h"
 
 #pragma comment (lib, "Mailman.lib")
 
-ComServer comLoader("tcp://*:5555", 1, 0);
-ComServer comPawns("tcp://*:5556", 100, 0);
+ComServer comLoader(LOADER_ADDRESS, 1, 0);
+ComServer comPawns(SERVER_ADDRESS, 100, 0);
 
 #include "FunctionCalls.h"
 

@@ -7,7 +7,7 @@ ComBroadcast::ComBroadcast(char *address, int timeout)
 	context = zmq_ctx_new();
 
 	//Socket to talk to clients
-	listeners = zmq_socket(context, ZMQ_REQ);	//TO DO, protocol
+	listeners = zmq_socket(context, ZMQ_PUB);	//TO DO, protocol
 	zmq_bind(listeners, address);
 }
 
