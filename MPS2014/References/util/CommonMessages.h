@@ -2,7 +2,14 @@
 #define HELLO_BACK_MSG "Hello to you to:"
 
 #define CONNECT_PAWN_MSG "Connect pawn:"
-#define CONNECT_PAWN_BSCK_MSG "Pawn connected:"
+#define CONNECT_PAWN_BACK_MSG "Pawn connected:"
+#define RESTART_PAWN_MSG "Restart pawn:"
+#define RESTART_PAWN_BACK_MSG "Pawn restarted:"
+
+#define START_GAME_MSG "Start game:"
+#define START_GAME_BACK_MSG "Game started:"
+#define STOP_GAME_MSG "Stop game:"
+#define STOP_GAME_BACK_MSG "Game stoped:"
 
 #define START_ROUND_MSG "Start round:"
 #define START_ROUND_BACK_MSG "Round started:"

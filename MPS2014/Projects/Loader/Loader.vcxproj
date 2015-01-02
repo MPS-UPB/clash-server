@@ -79,6 +79,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Loader.cpp" />
+    <ClCompile Include="Pawn.cpp" />
+    <ClCompile Include="Players.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Pawn.h" />
+    <ClInclude Include="Players.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

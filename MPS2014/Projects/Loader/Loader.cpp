@@ -1,55 +1,25 @@
 #include "zeromq/include/zmq.h"
 #include <string>
 #include <iostream>
+#include "Players.h"
 
 #pragma comment(lib, "util.lib")
 #include "util/util.h"
 #include "util\Addresses.h"
 #include "util\CommonMessages.h"
+#include "util\Definitions.h"
 
 #pragma comment(lib, "mailman.lib")
 #include "Mailman\ComClient.h"
+#include "Mailman\ComServer.h"
 
 ComClient *mailman_server;
 ComClient *mailman_gui;
+ComServer *mailman_from_server;
 
-bool server_started = false;
-bool gui_started = false;
-bool pawn_connected = false;
-bool round_started = false;
+Players players;
 
-std::string waitForPawn(std::string msg, void *opt)
-{
-	pawn_connected = true;
-	return std::string();
-}
-
-std::string waitForServer(std::string msg, void *opt)
-{
-	server_started = true;
-	return std::string();
-}
-
-std::string waitForGUI(std::string msg, void *opt)
-{
-	gui_started = true;
-	return std::string();
-}
-
-std::string waitForRoundStart(std::string msg, void *opt)
-{
-	round_started = true;
-	return std::string();
-}
-
-void initListeners()
-{
-	mailman_server->addListener(HELLO_BACK_MSG, waitForServer);
-	mailman_server->addListener(CONNECT_PAWN_MSG, waitForPawn);
-	mailman_server->addListener(START_ROUND_MSG, waitForRoundStart);
-
-	mailman_gui->addListener(HELLO_BACK_MSG, waitForGUI);
-}
+bool game_ended = false;
 
 void startServer(char *name, char *params)
 {
@@ -57,22 +27,18 @@ void startServer(char *name, char *params)
 	runProcess(name, params);
 
 	//start communication channel to server
-	mailman_server = new ComClient(SERVER_ADDRESS_TO, -1);
-	initListeners();
+	mailman_server = new ComClient(SERVER_ADDRESS_TO, TIMEOUT_LOADER_SERVER);
 
 	//connect
 	printf("LOADER: Connecting to MPS Server...\n");
 
 	//send hello
-	mailman_server->sendMessage(HELLO_MSG);
+	std::string response = mailman_server->sendMessage(HELLO_MSG);
 
-	//and wait for reply
-	while (!server_started)
-	{
-		mySleep(100);
-	}
-
-	printf("LOADER: Connected to MPS Server!\n");
+	if (getMessageElement(response, 0).compare(HELLO_BACK_MSG)==0)
+		printf("LOADER: Connected to MPS Server!\n");
+	else
+		printf("LOADER: Error connecting to server:%s\n", response);
 }
 
 void startGui(char *name, char *params)
@@ -80,62 +46,30 @@ void startGui(char *name, char *params)
 	//start exe
 	runProcess(name, params);
 
-	mailman_gui = new ComClient(GUI_ADDRESS_TO, -1);
+	mailman_gui = new ComClient(GUI_ADDRESS_TO, TIMEOUT_LOADER_GUI);
 
 	//connect
 	printf("LOADER: Starting GUI...\n");
 
 	//send hello and wait for reply
-	
-	mailman_gui->sendMessage(HELLO_MSG);
+	std::string response = mailman_gui->sendMessage(HELLO_MSG);
 
-	while (!gui_started)
-	{
-		mySleep(100);
-	}
-
-	printf("LOADER: GUI Started!\n");
-}
-
-void connectPawnToServer(std::string team, std::string name, int pid)
-{
-	printf("LOADER: Connecting %s:%s...\n", team, name);
-
-	//construct message for server
-	std::string message(CONNECT_PAWN_MSG);
-	char buffer[1024];
-	sprintf_s(buffer, 1024, "%d", pid);
-	message.append(buffer);
-	message.append(":");
-	message.append(team);
-	message.append(":");
-	message.append(name);
-
-	//send message
-	pawn_connected = false;
-	mailman_server->sendMessage(message);
-
-	//wait for confirmation
-	while (!pawn_connected)
-	{
-		mySleep(100);
-	}
-
-	printf("LOADER: Connected!\n");
+	if (getMessageElement(response, 0).compare(HELLO_BACK_MSG) == 0)
+		printf("LOADER: GUI Started!\n");
+	else
+		printf("LOADER: Error starting gui:%s\n", response);
 }
 
 void startRound()
 {
 	printf("LOADER: Starting Round!\n");
-	round_started = false;
-	mailman_server->sendMessage(START_ROUND_MSG);
 
-	while (!round_started)
-	{
-		mySleep(100);
-	}
+	std::string response = mailman_server->sendMessage(START_ROUND_MSG);
 
-	printf("LOADER: Round Started!\n");
+	if (getMessageElement(response, 0).compare(START_ROUND_BACK_MSG) == 0)
+		printf("LOADER: Round Started!\n");
+	else
+		printf("LOADER: Error starting round:%s\n", response);
 }
 
 void startClients()
@@ -192,11 +126,9 @@ void startClients()
 						process.append("\\");
 						process.append(crt_pawn);
 
-						//and run process
-						PROCESS_INFORMATION pi=runProcess(process.c_str(), NULL);
-
-						//connecting pawn to server
-						connectPawnToServer(crt_team, crt_pawn.substr(crt_pawn.length()-4), pi.dwProcessId);
+						Pawn p(process, crt_team, crt_pawn.substr(crt_pawn.length() - 4));
+						players.addPawn(p);
+						players.getPawn(p.getId())->connectToServer(mailman_server);
 					}
 				}
 			}
@@ -212,12 +144,52 @@ void startClients()
 	FindClose(hFind);
 }
 
+std::string restartPawn(std::string msg, void *pthis)
+{
+	//generate the id
+	std::string name;
+	std::string team;
+	team = getMessageElement(msg, 1);
+	name = getMessageElement(msg, 2);
+	std::string id(team);
+	id.append(name);
+
+	//restart the pawn with the received id
+	players.getPawn(id)->restart();
+
+	//send back confirmation and the new PID
+	std::string reply(RESTART_PAWN_BACK_MSG);
+	reply.append(toString(players.getPawn(id)->getPID()));
+
+	return reply;
+}
+
+std::string endGame(std::string msg, void *pthis)
+{
+	game_ended = true;
+	return std::string(STOP_GAME_BACK_MSG);
+}
+
+void startListening()
+{
+	mailman_from_server = new ComServer(LOADER_ADDRESS, 1, TIMEOUT_SERVER_LOADER);
+	mailman_from_server->addListener(RESTART_PAWN_MSG, restartPawn);
+	mailman_from_server->addListener(STOP_GAME_MSG, endGame);
+}
+
 void main()
 {
 	startServer("Server.exe", NULL);
 	startGui("GUI.exe", NULL);
 	startClients();
 	startRound();
+
+	startListening();
+
+	while (!game_ended)
+	{
+		mySleep(1000);
+	}
 
 	//TO DO: Listening Loop for Loader
 	printf("LOADER: Loader Exiting.\n");

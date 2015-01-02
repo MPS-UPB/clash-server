@@ -15,6 +15,10 @@ WCHAR* toWchar(const char *text, WCHAR *buffer, int len_buffer);
 
 char* toChar(WCHAR *text, char *buffer, int len_buffer);
 
+std::string toString(int nr);
+
 std::string getMessageElement(std::string message, int index, bool withDelimiter=true);
 
 PROCESS_INFORMATION runProcess(const char *AppName_c, const char *CmdLine_c);
+
+void killProcess(int pid);

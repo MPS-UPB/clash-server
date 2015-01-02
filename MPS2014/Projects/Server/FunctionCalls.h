@@ -12,7 +12,7 @@ std::string connect_pawn(std::string msgs, void *com)
 	Game *game = Game::getInstance();
 	game->addUser(pid, team, name);
 
-	std::string ret = std::string(CONNECT_PAWN_BSCK_MSG);
+	std::string ret = std::string(CONNECT_PAWN_BACK_MSG);
 	ret.append(team);
 	ret.append(":");
 	ret.append(name);

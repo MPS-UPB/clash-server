@@ -34,6 +34,13 @@ char* toChar(WCHAR *text, char *buffer, int len_buffer)
 	return buffer;
 }
 
+std::string toString(int nr)
+{
+	char buffer[1024];
+	sprintf_s(buffer, 1024, "%d", nr);
+	return std::string(buffer);
+}
+
 std::string getMessageElement(std::string message, int index, bool withDelimiter)
 {
 	size_t iterator = 0;
@@ -101,4 +108,11 @@ PROCESS_INFORMATION runProcess(const char *AppName_c, const char *CmdLine_c)
 	}
 
 	return processInformation;
+}
+
+void killProcess(int pid)
+{
+	HANDLE handy;
+	handy = OpenProcess(SYNCHRONIZE | PROCESS_TERMINATE, TRUE, pid);
+	TerminateProcess(handy, 0);
 }
