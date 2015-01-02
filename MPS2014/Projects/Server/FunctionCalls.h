@@ -5,34 +5,25 @@ std::string connect_pawn(std::string msgs, void *com)
 	int pid;
 	std::string name, team;
 
-	char *msg = _strdup(msgs.c_str());
-	int len = strlen(msg);
-	char *context = NULL;
-
-	char *split = strtok_s(msg, ":", &context);
-
-	pid = atoi(strtok_s(NULL, ":", &context));
-	team = std::string(strtok_s(NULL, ":", &context));
-	name = std::string(strtok_s(NULL, ":", &context));
+	pid = atoi(getMessageElement(msgs, 1, false).c_str());
+	team = getMessageElement(msgs, 2, false);
+	name = getMessageElement(msgs, 3, false);
 
 	Game *game = Game::getInstance();
-	game->addUser(pid, team.c_str(), name.c_str());
+	game->addUser(pid, team, name);
 
-	std::string ret = std::string("added user: ");
+	std::string ret = std::string(CONNECT_PAWN_BSCK_MSG);
 	ret.append(team);
 	ret.append(":");
 	ret.append(name);
-
-	free(msg);
 
 	return ret;
 }
 
 std::string replyToHello(std::string msgs, void *com)
 {
-	return std::string("Hello back from SERVER!");
+	return std::string(HELLO_BACK_MSG);
 }
-
 
 std::string sendPath(std::string msgs, void *com)
 {
@@ -85,7 +76,7 @@ std::string start_round(std::string msg, void *com)
 	//start pawns
 	comPawns.startListening();
 
-	return std::string("Round Started!");
+	return std::string(START_ROUND_BACK_MSG);
 }
 
 //TO DO: to verify if the one who sends start round and connect pawn is the loader 
@@ -97,5 +88,5 @@ std::string end_round(std::string msg, void *com)
 	//start listening for loader
 	((ComServer*)com)->startListening();
 
-	return std::string("Round Ended!");
+	return std::string(END_ROUND_BACK_MSG);
 }

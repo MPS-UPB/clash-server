@@ -7,13 +7,15 @@
 #pragma comment(lib, "mailman.lib")
 
 #include "util\Addresses.h"
+#include "util\CommonMessages.h"
+#include "util\Definitions.h"
 
 # include <iostream>
 
 #include "Board.h"
 
 int width = 800, height = 600;
-ComServer commands(GUI_ADDRESS, 1, 500);
+ComServer commands(GUI_ADDRESS, 1, TIMEOUT_SERVER_GUI);
 bool com_init = false;
 
 Board game_board(1,1);
@@ -26,8 +28,6 @@ void paint()
 
 	glutSwapBuffers();
 }
-
-
 
 void reshape(int w, int h)
 {
@@ -43,14 +43,14 @@ void init()
 }
 
 //Drop All:
-std::string dropAll(std::string, void*)
+std::string clearScene(std::string, void*)
 {
 	//TO DO
 	return NULL;
 }
 
 //Set Pawn:team:name:color:luminosity:x:y
-std::string setPawn(std::string, void*)
+std::string addPawn(std::string, void*)
 {
 	//TO DO
 	return NULL;
@@ -74,14 +74,13 @@ void idle()
 {
 	if (!com_init)
 	{
-		commands.addListener("Drop All:", dropAll);
-		commands.addListener("Set Pawn:", setPawn);
-		commands.addListener("Set Board:", setBoard);
-		commands.addListener("Repaint:", repaint);
+		commands.addListener(GUI_CLEAR_SCENE_MSG, clearScene);
+		commands.addListener(GUI_ADD_PAWN_MSG, addPawn);
+		commands.addListener(GUI_SET_BOARD_MSG, setBoard);
+		commands.addListener(GUI_REPAINT_MSG, repaint);
 		com_init = true;
 	}
 }
-
 
 int main(int argc, char *argv)
 {

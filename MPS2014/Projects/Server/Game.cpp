@@ -18,7 +18,7 @@ Game* Game::getInstance()
 	return instance;
 }
 
-void Game::addUser(int pid, const char *team, const char *name)
+void Game::addUser(int pid, std::string team, std::string name)
 {
 	Pawn new_member=Pawn(pid, name, team);
 	users.push_back(new_member);

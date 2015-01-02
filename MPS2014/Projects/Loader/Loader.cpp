@@ -1,144 +1,162 @@
-#define ZMQ_STATIC
 #include "zeromq/include/zmq.h"
 #include <string>
 #include <iostream>
 
-
-//#include "stdafx.h"
-//#include <windows.h>
-#include <direct.h>
-#include <string.h>
-#include <tchar.h>
-
 #pragma comment(lib, "util.lib")
 #include "util/util.h"
+#include "util\Addresses.h"
+#include "util\CommonMessages.h"
 
+#pragma comment(lib, "mailman.lib")
+#include "Mailman\ComClient.h"
 
-void *context;
-void *server_socker;
+ComClient *mailman_server;
+ComClient *mailman_gui;
 
-PROCESS_INFORMATION runProcess(char *AppName_c, char *CmdLine_c)
+bool server_started = false;
+bool gui_started = false;
+bool pawn_connected = false;
+bool round_started = false;
+
+std::string waitForPawn(std::string msg, void *opt)
 {
-
-	WCHAR AppName[1024], CmdLine[1024];
-
-	toWchar(AppName_c, AppName, 1024);
-	toWchar(CmdLine_c, CmdLine, 1024);
-
-	char buffer[1024];
-
-
-	printf("LOADER: Running Program: ");
-    printf("%s ", toChar(AppName, buffer, 1024));
-	if(CmdLine!=NULL)
-		printf("%s\n", toChar(CmdLine, buffer, 1024));
-	else
-		printf("\n");
-
-    PROCESS_INFORMATION processInformation;
-    STARTUPINFO startupInfo;
-    memset(&processInformation, 0, sizeof(processInformation));
-    memset(&startupInfo, 0, sizeof(startupInfo));
-    startupInfo.cb = sizeof(startupInfo);
-
-    BOOL result;
-    TCHAR tempCmdLine[MAX_PATH * 2];  //Needed since CreateProcessW may change the contents of CmdLine
-    if (CmdLine != NULL)
-    {
-        _tcscpy_s(tempCmdLine, MAX_PATH *2, CmdLine);
-        result = ::CreateProcess(AppName, tempCmdLine, NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, NULL, &startupInfo, &processInformation);
-    }
-    else
-    {
-        result = ::CreateProcess(AppName, CmdLine, NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, NULL, &startupInfo, &processInformation);
-    }
-
-    if (result == 0)
-    {
-		printf("LOADER: ERROR: CreateProcess failed!\n");
-    }
-
-	return processInformation;
+	pawn_connected = true;
+	return std::string();
 }
 
+std::string waitForServer(std::string msg, void *opt)
+{
+	server_started = true;
+	return std::string();
+}
 
+std::string waitForGUI(std::string msg, void *opt)
+{
+	gui_started = true;
+	return std::string();
+}
+
+std::string waitForRoundStart(std::string msg, void *opt)
+{
+	round_started = true;
+	return std::string();
+}
+
+void initListeners()
+{
+	mailman_server->addListener(HELLO_BACK_MSG, waitForServer);
+	mailman_server->addListener(CONNECT_PAWN_MSG, waitForPawn);
+	mailman_server->addListener(START_ROUND_MSG, waitForRoundStart);
+
+	mailman_gui->addListener(HELLO_BACK_MSG, waitForGUI);
+}
 
 void startServer(char *name, char *params)
 {
-	PROCESS_INFORMATION processInformation;
+	//start exe
+	runProcess(name, params);
 
-	processInformation=runProcess(name, params);
+	//start communication channel to server
+	mailman_server = new ComClient(SERVER_ADDRESS_TO, -1);
+	initListeners();
 
-	/*WaitForSingleObject( processInformation.hProcess, INFINITE );
-    CloseHandle( processInformation.hProcess );
-    CloseHandle( processInformation.hThread );*/
-}
-
-void startCommunication()
-{
 	//connect
-	printf ("LOADER: Connecting to MPS Server...\n");
-	context = zmq_ctx_new ();
-	server_socker = zmq_socket (context, ZMQ_REQ);
-	zmq_connect (server_socker, "tcp://localhost:5555");
+	printf("LOADER: Connecting to MPS Server...\n");
 
-	//Say hello and wait for answer
-	char buffer[1024];
-	strcpy_s(buffer, 1024, "hello:");
-	printf ("LOADER: Sending: %s\n", buffer);
-	zmq_send (server_socker, buffer, strlen(buffer)+1, 0);
+	//send hello
+	mailman_server->sendMessage(HELLO_MSG);
 
-	zmq_recv (server_socker, buffer, 1024, 0);
-	printf ("LOADER: Received: %s\n", buffer);
+	//and wait for reply
+	while (!server_started)
+	{
+		mySleep(100);
+	}
+
+	printf("LOADER: Connected to MPS Server!\n");
 }
 
-void connectPawnToServer(char *team, char *name, int pid)
+void startGui(char *name, char *params)
 {
+	//start exe
+	runProcess(name, params);
+
+	mailman_gui = new ComClient(GUI_ADDRESS_TO, -1);
+
+	//connect
+	printf("LOADER: Starting GUI...\n");
+
+	//send hello and wait for reply
+	
+	mailman_gui->sendMessage(HELLO_MSG);
+
+	while (!gui_started)
+	{
+		mySleep(100);
+	}
+
+	printf("LOADER: GUI Started!\n");
+}
+
+void connectPawnToServer(std::string team, std::string name, int pid)
+{
+	printf("LOADER: Connecting %s:%s...\n", team, name);
+
+	//construct message for server
+	std::string message(CONNECT_PAWN_MSG);
 	char buffer[1024];
-	sprintf_s(buffer, 1024, "connect pawn: %d:%s:%s", pid, team, name);
+	sprintf_s(buffer, 1024, "%d", pid);
+	message.append(buffer);
+	message.append(":");
+	message.append(team);
+	message.append(":");
+	message.append(name);
 
-	printf ("LOADER: Sending: %s\n", buffer);
-	zmq_send (server_socker, buffer, strlen(buffer)+1, 0);
+	//send message
+	pawn_connected = false;
+	mailman_server->sendMessage(message);
 
-	zmq_recv (server_socker, buffer, 1024, 0);
-	printf ("LOADER: Received: %s\n", buffer);
+	//wait for confirmation
+	while (!pawn_connected)
+	{
+		mySleep(100);
+	}
+
+	printf("LOADER: Connected!\n");
 }
 
 void startRound()
 {
-	char buffer[1024];
-	sprintf_s(buffer, 1024, "start round:");
+	printf("LOADER: Starting Round!\n");
+	round_started = false;
+	mailman_server->sendMessage(START_ROUND_MSG);
 
-	printf("LOADER: Sending: %s\n", buffer);
-	zmq_send(server_socker, buffer, strlen(buffer) + 1, 0);
+	while (!round_started)
+	{
+		mySleep(100);
+	}
 
-	zmq_recv(server_socker, buffer, 1024, 0);
-	printf("LOADER: Received: %s\n", buffer);
+	printf("LOADER: Round Started!\n");
 }
 
 void startClients()
 {
 	char buffer[MAX_PATH];
+	WCHAR wbuffer[MAX_PATH];
+
 	WIN32_FIND_DATA found_files;
-	char crt_directory[MAX_PATH];
-	WCHAR crt_directory_w[MAX_PATH];
 	HANDLE hFind = INVALID_HANDLE_VALUE;
 
 	WIN32_FIND_DATA found_pawns;
-	char crt_team[MAX_PATH];
-	WCHAR crt_team_w[MAX_PATH];
 	HANDLE hPawn = INVALID_HANDLE_VALUE;
-
-	char crt_pawn[MAX_PATH];
-	char cmd_line[MAX_PATH];
 
 	DWORD dwError=0;
 
 	//Find all teams
-	strcpy_s(crt_directory, MAX_PATH, ".\\Teams\\*");
-
+	std::string crt_directory(TEAMS_PATH);
+	crt_directory.append("\\*");
+	
 	// Find the first file in the directory.
-	hFind = FindFirstFile(toWchar(crt_directory, crt_directory_w, 1024), &found_files);
+	hFind = FindFirstFile(toWchar(crt_directory.c_str(), wbuffer, MAX_PATH), &found_files);
 	assert(INVALID_HANDLE_VALUE != hFind, "LOADER: Cannot open pawns directory!\n");
 
 	//List all teams
@@ -146,48 +164,39 @@ void startClients()
 	{
 		if (found_files.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY && found_files.cFileName[0]!='.')
 		{
-			//printf("Team: %s\n", found_files.cFileName);
+			std::string crt_team;
 
 			//Find all pawns in team
-			strcpy_s(crt_team, MAX_PATH, ".\\Teams\\");
-			strcat_s(crt_team, MAX_PATH, toChar(found_files.cFileName, buffer, MAX_PATH));
-			strcat_s(crt_team, MAX_PATH, "\\*");
+			crt_team.append(TEAMS_PATH);
+			crt_team.append("\\");
+			crt_team.append(toChar(found_files.cFileName, buffer, MAX_PATH));
+			crt_team.append("\\*");
 
-			hPawn = FindFirstFile(toWchar(crt_team, crt_team_w, MAX_PATH), &found_pawns);
+			hPawn = FindFirstFile(toWchar(crt_team.c_str(), wbuffer, MAX_PATH), &found_pawns);
 			assert(INVALID_HANDLE_VALUE != hPawn, "LOADER: Cannot open team directory!\n");
 
 			//List all members in the teams
 			do
 			{
+				//If it is a file
 				if ((!(found_pawns.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)))
 				{
-					char *cFileName=toChar(found_pawns.cFileName, buffer, MAX_PATH);
-					if(strncmp(&cFileName[strlen(cFileName)-4], ".exe", 4)==0)
+					std::string crt_pawn(toChar(found_pawns.cFileName, buffer, MAX_PATH));
+					//And executable
+					if (crt_pawn.compare(crt_pawn.length()-4, 4, ".exe") == 0)
 					{
-						//printf("\t%s\n", found_pawns.cFileName);
+						//Construct running path
+						std::string process(TEAMS_PATH);
+						process.append("\\");
+						process.append(crt_team);
+						process.append("\\");
+						process.append(crt_pawn);
 
-						//starting pawn
-						strcpy_s(crt_pawn, MAX_PATH, ".\\Teams\\");
-						strcat_s(crt_pawn, MAX_PATH, toChar(found_files.cFileName, buffer, MAX_PATH));
-						strcat_s(crt_pawn, MAX_PATH, "\\");
-						strcat_s(crt_pawn, MAX_PATH, toChar(found_pawns.cFileName, buffer, MAX_PATH));
-
-						strcpy_s(cmd_line, MAX_PATH, "\"");
-						strcat_s(cmd_line, MAX_PATH, toChar(found_files.cFileName, buffer, MAX_PATH));
-						strcat_s(cmd_line, MAX_PATH, "\" \"");
-						strcat_s(cmd_line, MAX_PATH, toChar(found_pawns.cFileName, buffer, MAX_PATH));
-						strcat_s(cmd_line, MAX_PATH, "\"");
-
-
-						PROCESS_INFORMATION pi=runProcess(crt_pawn, cmd_line);
+						//and run process
+						PROCESS_INFORMATION pi=runProcess(process.c_str(), NULL);
 
 						//connecting pawn to server
-						char name[1024], team[1024];
-						toChar(found_files.cFileName, team, 1024);
-						toChar(found_pawns.cFileName, name, 1024);
-
-						//printf("Connecting pawn: %s %s\n", team, name);
-						connectPawnToServer(team, name, pi.dwProcessId);
+						connectPawnToServer(crt_team, crt_pawn.substr(crt_pawn.length()-4), pi.dwProcessId);
 					}
 				}
 			}
@@ -201,15 +210,15 @@ void startClients()
 	assert(dwError != ERROR_NO_MORE_FILES, "LOADER: Cannot read pawns directory!\n");
 
 	FindClose(hFind);
-
-	startRound();
 }
 
 void main()
 {
 	startServer("Server.exe", NULL);
-	startCommunication();
+	startGui("GUI.exe", NULL);
 	startClients();
+	startRound();
 
+	//TO DO: Listening Loop for Loader
 	printf("LOADER: Loader Exiting.\n");
 }

@@ -28,6 +28,7 @@ private:
 	void *workers;	//socket for sending work to worker threads
 
 	bool listening;
+	int active_threads;
 
 	pthread_t *listening_thread;
 

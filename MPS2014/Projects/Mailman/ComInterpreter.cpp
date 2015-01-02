@@ -5,33 +5,30 @@ ComInterpreter::ComInterpreter()
 	commands = new std::map<std::string, callbackFunction, compCommand>();
 }
 
-void ComInterpreter::addListener(char *command, callbackFunction func)
+void ComInterpreter::addListener(std::string command, callbackFunction func)
 {
-	(*commands)[std::string(command)] = func;
+	(*commands)[command] = func;
 }
 
-void ComInterpreter::removeListener(char *command)
+void ComInterpreter::removeListener(std::string command)
 {
 	commands->erase(command);
 }
 
-std::string  ComInterpreter::interpret(char *message)
+std::string ComInterpreter::interpret(std::string message)
 {
-	char buffer[1024];
-
 	std::map<std::string, callbackFunction, compCommand>::iterator it;
 
-	char *cmd = getCommand(message, buffer, 1024);
+	std::string cmd = getCommand(message);
 	it = commands->find(cmd);
 
 	if (it == commands->end())
 	{
-		strcpy_s(buffer, 1024, "Unknown Command!\n");
-		return std::string(buffer);
+		return std::string("Unknown Command!\n");
 	}
 	else
 	{
-		return it->second(std::string(message), this);
+		return it->second(message, this);
 	}
 }
 
@@ -40,11 +37,12 @@ ComInterpreter::~ComInterpreter()
 	delete commands;
 }
 
-char* ComInterpreter::getCommand(char *msg, char *ret, int dim_ret)
+//TO DO: FIXED: test if works ok
+std::string ComInterpreter::getCommand(std::string msg)
 {
-	//printf("Entire command: %s\n", msg);
-	int nr = strchr(msg, ':') - msg + 1;
-	strncpy_s(ret, dim_ret, msg, nr);
-	//printf("Computed command: %s\n", ret);
-	return ret;
+	size_t end_cmd = msg.find(':');
+	if (end_cmd == std::string::npos)
+		return std::string(":");
+
+	return msg.substr(0, end_cmd + 1);
 }

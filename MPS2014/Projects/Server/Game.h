@@ -16,5 +16,5 @@ public:
 
 	static Game* getInstance();
 
-	void addUser(int pid, const char *team, const char *name);
+	void addUser(int pid, std::string team, std::string name);
 };

@@ -4,30 +4,24 @@
 #include <string.h>
 #include <malloc.h>
 
-Pawn::Pawn(int pid, const char *team, const char *name)
+Pawn::Pawn(int pid, std::string team, std::string name)
 {
 	this->pid=pid;
-	this->name=_strdup(name);
-	this->team=_strdup(team);
+	this->name=name;
+	this->team=team;
 
-	int dim=strlen(name)+strlen(team)+2;
-
-	id=(char*)malloc(sizeof(char)*(dim));
-	strcpy_s(id, dim, team);
-	strcat_s(id, dim, ":");
-	strcat_s(id, dim, name);
+	id = std::string(team);
+	id.append(":");
+	id.append(name);
 }
 
 Pawn::~Pawn()
 {
-	free(name);
-	free(team);
-	free(id);
 }
 
 bool Pawn::operator==(const Pawn &other)
 {
-	return (strcmp(id, other.id)==0);
+	return id.compare(other.id)==0;
 }
 
 bool Pawn::operator!=(const Pawn &other)
@@ -35,22 +29,22 @@ bool Pawn::operator!=(const Pawn &other)
 	return !(*this==other);
 }
 
-char* Pawn::getId()
+std::string Pawn::getId()
 {
 	return id;
 }
 
-char* Pawn::getTeam()
+std::string Pawn::getTeam()
 {
 	return team;
 }
 
-char* Pawn::getName()
+std::string Pawn::getName()
 {
 	return name;
 }
 
-bool Pawn::fromTeam(char *team)
+bool Pawn::fromTeam(std::string team)
 {
-	return (strcmp(this->team, team)==0);
+	return this->team.compare(team)==0;
 }

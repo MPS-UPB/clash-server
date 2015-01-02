@@ -78,6 +78,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Addresses.h" />
+    <ClInclude Include="CommonMessages.h" />
+    <ClInclude Include="Definitions.h" />
     <ClInclude Include="util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -15,6 +15,7 @@
 //Protocol: REQ from REQ/REP
 //Used for sending messages to a single server and receiving answers from it, blocking
 
+//TO DO: implement timeout; timeout-1= infinite
 class MAILMAN_API ComClient : public ComInterpreter
 {
 private:
@@ -26,7 +27,7 @@ private:
 public:
 	ComClient(char *address, int timeout);
 
-	std::string sendMessage(char *message);
+	std::string sendMessage(std::string message);
 
 	~ComClient();
 };

@@ -16,6 +16,7 @@
 //Doesn't verify for receival -> it's the client's fault that it chrashed
 //protocol: PUB from PUB/SUB
 
+//TO DO: implement timeout; timeout -1=infinite
 class MAILMAN_API ComBroadcast
 {
 private:
@@ -27,7 +28,7 @@ private:
 public:
 	ComBroadcast(char *address, int timeout);
 
-	void sendMessage(char *message);
+	void sendMessage(std::string message);
 
 	~ComBroadcast();
 };

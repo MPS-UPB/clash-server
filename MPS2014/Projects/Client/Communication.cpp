@@ -1,16 +1,16 @@
 #include "Communication.h"
+#include "util\Addresses.h"
+#include "util\Definitions.h"
 
 
-Communication::Communication() : com_requests("tcp://localhost:5555", 0)
+Communication::Communication()
 {
-	
+	com_requests = new ComClient(SERVER_ADDRESS_TO, TIMEOUT_SERVER_PAWN);
 }
 
 Communication::~Communication()
 {
-	//TO DO: test for closing
-	zmq_close (socket_query);
-	zmq_ctx_destroy (context_query);
+	delete com_requests;
 }
 
 

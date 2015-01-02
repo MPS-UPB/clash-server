@@ -29,5 +29,11 @@
     <ClInclude Include="Addresses.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CommonMessages.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Definitions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

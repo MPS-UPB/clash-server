@@ -22,7 +22,7 @@
 #include "util/util.h"
 
 
-
+//TO DO: implement timeout; timeout -1=infinite
 class MAILMAN_API ComServer : public ComInterpreter
 {
 private:
@@ -34,6 +34,7 @@ private:
 	void *workers;	//socket for sending work to worker threads
 
 	int nr_threads;
+	int active_threads;
 
 	bool listening;
 
@@ -41,7 +42,7 @@ private:
 
 	
 public:
-	//TO DO: use internal address
+	//TO DO: use internal address, maibe not working with inproc://workers
 	ComServer(char *address, int nr_threads, int timeout);
 
 	void startListening();

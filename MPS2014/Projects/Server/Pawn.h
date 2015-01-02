@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 
 class Pawn
 {
@@ -6,14 +7,14 @@ private:
 	//process id
 	int pid;
 	//user name
-	char *name;
+	std::string name;
 	//original team
-	char *team;
+	std::string team;
 	//team:name
-	char *id;
+	std::string id;
 
 public:
-	Pawn(int pid, const char *team, const char *name);
+	Pawn(int pid, std::string team, std::string name);
 
 	~Pawn();
 
@@ -21,11 +22,11 @@ public:
 
 	bool operator!=(const Pawn &other);
 
-	char* getId();
+	std::string getId();
 
-	char* getTeam();
+	std::string getTeam();
 
-	char* getName();
+	std::string getName();
 
-	bool fromTeam(char *team);
+	bool fromTeam(std::string team);
 };

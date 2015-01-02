@@ -1,4 +1,5 @@
 #include "ComBroadcast.h"
+#include "util\Definitions.h"
 
 ComBroadcast::ComBroadcast(char *address, int timeout)
 {
@@ -7,19 +8,33 @@ ComBroadcast::ComBroadcast(char *address, int timeout)
 	context = zmq_ctx_new();
 
 	//Socket to talk to clients
-	listeners = zmq_socket(context, ZMQ_PUB);	//TO DO, protocol
+	listeners = zmq_socket(context, ZMQ_PUB);
 	zmq_bind(listeners, address);
 }
 
-//TO DO: verify that buffer ends with 0
-//TO DO: larger messages
-void ComBroadcast::sendMessage(char *message)
+void ComBroadcast::sendMessage(std::string message)
 {
-	char buffer[1024];
+	int len = message.size();
+	const char *msg_data = message.data();
+	int iterator = 0;
 
-	strcpy_s(buffer, 1024, message);
+	//send message fragments MESSAGE_LENGTH_DEF in size
+	while (iterator < len)
+	{
+		//get a fragment
+		int substr_len = min(len, MESSAGE_LENGTH_DEF);
 
-	zmq_send(listeners, buffer, strlen(buffer) + 1, 0);
+		int more_messages = 0;
+		if (len - iterator - substr_len > 0)
+			more_messages = ZMQ_SNDMORE;
+
+		//send the fragment
+		int error = zmq_send(listeners, &(msg_data[iterator]), substr_len, more_messages);
+		assert(error == substr_len, "Cannot send message in ComBroadcast!");
+
+		//iterate through the data
+		iterator += substr_len;
+	}
 }
 
 ComBroadcast::~ComBroadcast()

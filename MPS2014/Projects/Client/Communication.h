@@ -18,7 +18,7 @@ private:
 	//socket for receiving indications from server
 	void *socket_command;
 
-	ComClient com_requests;
+	ComClient *com_requests;
 
 public:
 	/**
