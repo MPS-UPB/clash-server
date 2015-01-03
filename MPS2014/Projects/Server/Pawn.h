@@ -13,8 +13,12 @@ private:
 	//team:name
 	std::string id;
 
+	std::string playing_team;
+
 public:
 	Pawn(int pid, std::string team, std::string name);
+
+	Pawn();
 
 	~Pawn();
 
@@ -26,7 +30,13 @@ public:
 
 	std::string getTeam();
 
+	std::string getPlayingTeam();
+
 	std::string getName();
+
+	void setPid(int pid);
+
+	void setPlayingTeam(std::string playing_team);
 
 	bool fromTeam(std::string team);
 };

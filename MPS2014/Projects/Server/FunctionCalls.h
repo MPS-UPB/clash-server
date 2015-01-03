@@ -70,6 +70,16 @@ std::string getColor(std::string msgs, void *com)
 
 std::string start_round(std::string msg, void *com)
 {
+	//Put pawns on the board
+	Game *game = Game::getInstance();
+	game->choosePlayingPawns();
+	game->placePlayingPawns();
+
+
+
+
+
+
 	//stop loader
 	((ComServer*)com)->pauseListening();
 

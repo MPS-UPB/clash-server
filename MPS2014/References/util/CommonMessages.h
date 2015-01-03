@@ -1,8 +1,8 @@
 #define HELLO_MSG "Hello:"
 #define HELLO_BACK_MSG "Hello to you to:"
 
-#define CONNECT_PAWN_MSG "Connect pawn:"
-#define CONNECT_PAWN_BACK_MSG "Pawn connected:"
+#define CONNECT_PAWN_MSG "Connect pawn:"	//PID:ID
+#define CONNECT_PAWN_BACK_MSG "Pawn connected:"	//ID
 #define RESTART_PAWN_MSG "Restart pawn:"
 #define RESTART_PAWN_BACK_MSG "Pawn restarted:"
 

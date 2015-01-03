@@ -15,6 +15,15 @@ Pawn::Pawn(int pid, std::string team, std::string name)
 	id.append(name);
 }
 
+Pawn::Pawn()
+{
+	this->pid = -1;
+	this->name = std::string();
+	this->team = std::string();
+
+	id = std::string();
+}
+
 Pawn::~Pawn()
 {
 }
@@ -39,9 +48,24 @@ std::string Pawn::getTeam()
 	return team;
 }
 
+std::string Pawn::getPlayingTeam()
+{
+	return playing_team;
+}
+
 std::string Pawn::getName()
 {
 	return name;
+}
+
+void Pawn::setPid(int pid)
+{
+	this->pid = pid;
+}
+
+void Pawn::setPlayingTeam(std::string playing_team)
+{
+	this->playing_team = playing_team;
 }
 
 bool Pawn::fromTeam(std::string team)

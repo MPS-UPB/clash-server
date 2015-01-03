@@ -9,7 +9,7 @@
 
 #pragma comment (lib, "Mailman.lib")
 
-ComServer comLoader(LOADER_ADDRESS, 1, TIMEOUT_SERVER_LOADER);
+ComServer comLoader(SERVER_ADDRESS, 1, TIMEOUT_SERVER_LOADER);
 ComServer comPawns(SERVER_ADDRESS, WORKER_THREADS_NR_DEF, TIMEOUT_SERVER_PAWN);
 
 #include "FunctionCalls.h"

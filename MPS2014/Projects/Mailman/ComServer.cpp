@@ -118,11 +118,6 @@ void ComServer::pauseListening()
 		listening = false;
 		zmq_close(clients);
 		zmq_close(workers);
-
-		while (active_threads > 0)
-		{
-			mySleep(100);
-		}
 	}
 }
 
@@ -133,6 +128,11 @@ ComServer::~ComServer()
 	address = NULL;
 
 	pauseListening();
+
+	while (active_threads > 0)
+	{
+		mySleep(100);
+	}
 
 	zmq_ctx_destroy(context);
 

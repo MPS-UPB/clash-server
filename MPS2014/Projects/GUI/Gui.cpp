@@ -15,7 +15,7 @@
 #include "Board.h"
 
 int width = 800, height = 600;
-ComServer commands(GUI_ADDRESS, 1, TIMEOUT_SERVER_GUI);
+ComServer comCommands(GUI_ADDRESS, 1, TIMEOUT_SERVER_GUI);
 bool com_init = false;
 
 Board game_board(1,1);
@@ -35,11 +35,17 @@ void reshape(int w, int h)
 	height = h;
 }
 
+std::string replyToHello(std::string msg, void *pthis)
+{
+	return std::string(HELLO_BACK_MSG);
+}
+
 void init()
 {
 	glClearColor(0, 0, 0, 1);
 	//TO DO: set some common states, like background color (glClearColor); enable/disable lighting and materials; set settings for lights (position, material)
-	commands.startListening();
+	comCommands.addListener(HELLO_MSG, replyToHello);
+	comCommands.startListening();
 }
 
 //Drop All:
@@ -74,10 +80,10 @@ void idle()
 {
 	if (!com_init)
 	{
-		commands.addListener(GUI_CLEAR_SCENE_MSG, clearScene);
-		commands.addListener(GUI_ADD_PAWN_MSG, addPawn);
-		commands.addListener(GUI_SET_BOARD_MSG, setBoard);
-		commands.addListener(GUI_REPAINT_MSG, repaint);
+		comCommands.addListener(GUI_CLEAR_SCENE_MSG, clearScene);
+		comCommands.addListener(GUI_ADD_PAWN_MSG, addPawn);
+		comCommands.addListener(GUI_SET_BOARD_MSG, setBoard);
+		comCommands.addListener(GUI_REPAINT_MSG, repaint);
 		com_init = true;
 	}
 }
