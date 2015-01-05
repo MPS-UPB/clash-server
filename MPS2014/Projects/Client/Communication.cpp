@@ -80,6 +80,10 @@ int Communication::getBoardSize()
 	return 13;
 }
 
+int Communication::getThinkingTime()
+{
+	return 1000;
+}
 
 std::string Communication::getPath(std::string id, int t1, int t2)
 {
