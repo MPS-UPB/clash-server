@@ -120,8 +120,15 @@ public:
 	
 	/**
 	 * Returns the size of the board edge. The board is square.
+	 * @return size of an egde
 	 */
 	int getBoardSize();
+	
+	/**
+	 * Returns how many miliseconds you have between start() and stop()
+	 * @return number of miliseconds between start and stop
+	 */
+	int getThinkingTime();
 
 	/**
 	Returns the path of a pawn from the starting time t1 till t2. If the player didn't offer 
