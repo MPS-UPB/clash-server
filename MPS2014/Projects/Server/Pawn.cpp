@@ -13,6 +13,8 @@ Pawn::Pawn(int pid, std::string team, std::string name)
 	id = std::string(team);
 	id.append(":");
 	id.append(name);
+
+	x = y = -1;
 }
 
 Pawn::Pawn()
@@ -66,9 +68,21 @@ void Pawn::setPid(int pid)
 void Pawn::setPlayingTeam(std::string playing_team)
 {
 	this->playing_team = playing_team;
+	x = y = -1;
+}
+
+void Pawn::setPosition(int x, int y)
+{
+	this->x = x;
+	this->y = y;
 }
 
 bool Pawn::fromTeam(std::string team)
 {
 	return this->team.compare(team)==0;
+}
+
+bool Pawn::playingForTeam(std::string team)
+{
+	return this->playing_team.compare(team) == 0;
 }

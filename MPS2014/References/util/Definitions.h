@@ -7,3 +7,5 @@
 #define TIMEOUT_LOADER_GUI -1
 
 #define WORKER_THREADS_NR_DEF 10
+
+#define RANDOM_SEED 1

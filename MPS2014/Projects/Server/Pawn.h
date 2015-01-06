@@ -14,6 +14,8 @@ private:
 	std::string id;
 
 	std::string playing_team;
+	//position on board
+	int x, y;
 
 public:
 	Pawn(int pid, std::string team, std::string name);
@@ -38,5 +40,9 @@ public:
 
 	void setPlayingTeam(std::string playing_team);
 
+	void setPosition(int x, int y);
+
 	bool fromTeam(std::string team);
+
+	bool playingForTeam(std::string team);
 };

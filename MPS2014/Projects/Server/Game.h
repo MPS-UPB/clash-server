@@ -20,6 +20,12 @@ private:
 		}
 	};
 
+	class teamPropesties
+	{
+		public:
+		int color, edge;
+	};
+
 	typedef std::map<std::string, Pawn, compStr>		pawns_t;
 	typedef std::map< std::string, pawns_t, compStr>	teams_t;
 	typedef pawns_t::iterator							pawns_iter_t;
@@ -27,10 +33,9 @@ private:
 
 	//key=team, value=map(key=name, value=Pawn)
 	teams_t teams;
-	std::map<std::string, int> team_colors;
+	std::map<std::string, teamPropesties, compStr> team_properties;
 
-	int nr_of_playing_teams;
-	std::string *playing_teams_s;
+	std::vector <std::string> playing_teams;
 
 public:
 	static Game* getInstance();
@@ -58,4 +63,6 @@ public:
 	int getTeamSize();
 
 	~Game();
+private:
+	void getDefaultPosition(int edge, int index, int &x, int &y);
 };

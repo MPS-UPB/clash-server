@@ -1,6 +1,10 @@
 #include "Game.h"
 #include "Pawn.h"
 #include "util\util.h"
+#include "util\Definitions.h"
+#include <vector>
+#include <algorithm>
+#include <random>
 
 Game *Game::instance = NULL;
 
@@ -42,7 +46,7 @@ void Game::addUser(int pid, std::string team, std::string name)
 	{
 		pawns_t new_team;
 		teams[team] = new_team;
-		team_colors[team] = team_colors.size();
+		team_properties[team].color = team_properties.size();
 	}
 
 	//add the pawn to the team
@@ -86,147 +90,192 @@ void Game::resetPlayingPawns()
 	}
 }
 
+//move x and y in the next position from the line considering th edge
+void Game::getDefaultPosition(int edge, int index, int &x, int &y)
+{
+	//if not on board
+	if (x < 0 || y<0)
+	{
+		x = y = -1;
+		return;
+	}
+
+	//else get position
+	switch (edge)
+	{
+	case 0 :
+		x = index;
+		y = 0;
+		break;
+	case 1:
+		x = getBoardSize() - 1;
+		y = index;
+		break;
+	case 2:
+		x = getBoardSize() - 1-index;
+		y = getBoardSize() - 1;
+		break;
+	case 3:
+		x = 0;
+		y = getBoardSize() - 1 - index;
+	}
+}
+
 void Game::placePlayingPawns()
 {
-	//int edges[4];
+	//Select playing edges
+	/*
+
+	Edges:
+	|-0-|
+	3   1
+	|-2-|
+
+	Coordinate System:
+
+	0-- > X
+	|
+    V
+	Y
+
+	*/
+
+	int nr_of_playing_teams = playing_teams.size();
+
+	int e0, e1;
+	int edges[4] = { 0, 0, 0, 0 };
+	if (nr_of_playing_teams <4)
+	{
+		e0 = rand() % 2;
+		e1 = e0 + 2;
+		edges[e0] = 1;
+		edges[e1] = 1;
+	}
+	if (nr_of_playing_teams == 3)
+	{
+		edges[e0 + 1] = 1;
+	}
+	if (nr_of_playing_teams == 4)
+	{
+		edges[0] = edges[1] = edges[2] = edges[3] = 1;
+	}
+
+	int crt_edge = 0;
+	int x, y;
+	//go through all the playing teams
+	for (int i = 0; i < nr_of_playing_teams; i++)
+	{
+		//choose an edge for it
+		for (crt_edge; crt_edge < 4; crt_edge++)
+			if (edges[crt_edge])
+				break;
+
+		x = y = -1;
+
+		std::vector < int >pawn_positions;
+		for (int j = 0; j < getTeamSize(); j++)
+		{
+			pawn_positions.push_back(j);
+		}
+		std::shuffle(pawn_positions.begin(), pawn_positions.end(), std::default_random_engine(RANDOM_SEED));
+
+		//go through all the pawns and place on board considering where it plays
+		for (teams_iter_t team = teams.begin(); team != teams.end(); team++)
+		{
+			int index = 0;
+			for (pawns_iter_t pawn = team->second.begin(); pawn != team->second.end(); pawn++)
+				if (pawn->second.playingForTeam(playing_teams[i]))
+				{
+					getDefaultPosition(crt_edge, pawn_positions[index], x, y);
+					pawn->second.setPosition(x, y);
+					index++;
+				}
+		}
+
+	}
 }
 
 void Game::choosePlayingPawns()
 {
 	resetPlayingPawns();
 
-	//select playing teams
-	int nr_of_total_teams = teams.size();
-	nr_of_playing_teams = min(4, nr_of_total_teams);
+	//-------------------SELECT TEAMS TO PLAY-------------------
+	int nr_of_playing_teams = min(4, teams.size());
 
-	int *playing_teams = new int[nr_of_playing_teams];
-	for (int i = 0; i < nr_of_playing_teams; i++)
-	{
-		//choose a random team
-		playing_teams[i] = rand()%nr_of_total_teams;
+	playing_teams.clear();
+	teams_iter_t ti = teams.begin();
 
-		//if allready chosen, try again
-		for (int j = 0; j < i;j++)
-			if (playing_teams[i] == playing_teams[j])
-			{
-				i--;
-				break;
-			}
-	}
+	for (ti = teams.begin(); ti != teams.end(); ti++)
+		playing_teams.push_back(ti->first);
 
-	//find the team names
-	if (playing_teams_s != NULL)
-		delete playing_teams_s;
-	playing_teams_s = new std::string[nr_of_playing_teams];
-	for (int i = 0; i < nr_of_playing_teams; i++)
-	{
-		std::map<std::string, int>::iterator it;
-		for (it = team_colors.begin(); it != team_colors.end(); it++)
-		{
-			if (it->second == playing_teams[i])
-				playing_teams_s[i] = it->first;
-		}
-	}
+	std::shuffle(playing_teams.begin(), playing_teams.end(), std::default_random_engine(RANDOM_SEED));
+	playing_teams.resize(nr_of_playing_teams);
 
-	//number of sure players in a team
+
+	
+	//-------------------PUT HALF OF THE ORIGINAL MEMBERS IN THE TEAMS-------------------
 	unsigned int half_team = 9999999;
-	int nr_of_players = 0;
-
-
-	//count number of players in each playing team
-	int *nr_players_per_team = new int[nr_of_playing_teams];
-
 	for (teams_iter_t it = teams.begin(); it != teams.end(); it++)
 		if (half_team>it->second.size())
 			half_team = it->second.size();
+	//half of the smallest team must surely be in the original teams
 	half_team /= 2;
-
-	//find number of players currently playing
-	for (int i = 0; i < nr_of_playing_teams; i++)
-	{
-		nr_of_players += teams[playing_teams_s[i]].size();
-	}
-
 	//select half_team random pawns from every team to be in the original team
 	//for all playing teams
 	for (int i = 0; i < nr_of_playing_teams; i++)
 	{
-		int nr_of_team_players = teams[playing_teams_s[i]].size();
-		int probability = nr_of_team_players / half_team;
-
-		pawns_t crt_team = teams[playing_teams_s[i]];
+		pawns_t &crt_team = teams[playing_teams[i]];
 		unsigned int playing = 0;
-		//retry as long as not enough pawns choosen
-		while (playing < half_team)
-		{
-			//for all pawns in team
-			for (pawns_iter_t itp = crt_team.begin(); itp != crt_team.end(); itp++)
-				//if pawn was lucky and wasn't chosen yet
-				if (rand() % probability == 0 && itp->second.getPlayingTeam().size() == 0)
-				{
-					//add it to the playing team
-					itp->second.setPlayingTeam(playing_teams_s[i]);
 
-					//if enough pawns, stop
-					playing++;
-					if (playing == half_team)
-						break;
-				}
+		std::vector <Pawn*> random_pawns;
+		
+		//for all pawns in team
+		for (pawns_iter_t itp = crt_team.begin(); itp != crt_team.end(); itp++)
+			random_pawns.push_back(&(itp->second));
+		//randomly choose half_team membes
+		std::shuffle(random_pawns.begin(), random_pawns.end(), std::default_random_engine(RANDOM_SEED));
+		random_pawns.resize(half_team);
+
+		for (int j = 0; j < random_pawns.size(); j++)
+		{
+			random_pawns[j]->setPlayingTeam(playing_teams[i]);
 		}
 	}
 
-	//choose randomly from the other playing members and assign them to random teams
-	int probability = 
-		(nr_of_players - (half_team*nr_of_playing_teams)) / 
-		(getTeamSize() - half_team*nr_of_playing_teams);
-	int *playing_team_size = new int[nr_of_playing_teams];
-	for (int i = 0; i < nr_of_playing_teams; i++) playing_team_size[i] = 0;
+	//-----------------------PUT THE REST OF THE PAWNS IN RANDOM TEAMS------------------
 
-	int players_on_board = 0;
-
-	//retry as long as not enough pawns choosen
-	while (players_on_board < getTeamSize()*nr_of_playing_teams)
+	//add all plausible pawns to a random vector
+	std::vector <Pawn*>remaining_pawns;
+	for (int i = 0; i < playing_teams.size(); i++)
 	{
-		//for all teams
-		for (teams_iter_t team = teams.begin(); team != teams.end(); team++)
-		{
-			//for all pawns
-			for (pawns_iter_t pawn = team->second.begin(); pawn != team->second.end(); pawn++)
-			{
-				//if was lucky and wasn't chosen for a team yet
-				if (rand() % probability == 0 && pawn->second.getTeam().size() == 0)
-				{
-					//randomly choose a team that doesn't have enough members
-					int playing_team;
-					do
-					{
-						playing_team = rand() % nr_of_playing_teams;
-					} while (playing_team_size[playing_team] >= getTeamSize());
-					//and assign the pawn to it
-					pawn->second.setPlayingTeam(playing_teams_s[playing_team]);
+		pawns_t &team = teams[playing_teams[i]];
 
-					//if all teams are full, stop
-					players_on_board++;
-					if (players_on_board == getTeamSize()*nr_of_playing_teams)
-						break;
-				}
-				if (players_on_board == getTeamSize()*nr_of_playing_teams)
-					break;
-			}
+		for (pawns_iter_t pawn = team.begin(); pawn != team.end(); pawn++)
+			if (pawn->second.getPlayingTeam().length()==0)
+				remaining_pawns.push_back(&(pawn->second));
+	}
+
+	std::shuffle(remaining_pawns.begin(), remaining_pawns.end(), std::default_random_engine(RANDOM_SEED));
+
+	//for each team
+	for (int i = 0; i < playing_teams.size(); i++)
+	{
+		//give the same number of members
+		int nr_remaining_pawns_per_team = getTeamSize() - half_team;
+		for (int j = 0; j < nr_remaining_pawns_per_team; j++)
+		{
+			remaining_pawns[i*playing_teams.size() + j]->setPlayingTeam(playing_teams[i]);
 		}
 	}
 
-	delete playing_teams;
-	delete nr_players_per_team;
-	delete playing_team_size;
 }
 
 int Game::getTeamColor(std::string team)
 {
-	std::map<std::string, int>::iterator it;
-	if ((it=team_colors.find(team)) == team_colors.end())
+	std::map<std::string, teamPropesties, compStr>::iterator it;
+	if ((it = team_properties.find(team)) == team_properties.end())
 		return -1;
-	return it->second;
+	return it->second.color;
 }
 
 int Game::getBoardSize()
@@ -243,6 +292,4 @@ int Game::getTeamSize()
 
 Game::~Game()
 {
-	if (playing_teams_s != NULL)
-		delete playing_teams_s;
 }
