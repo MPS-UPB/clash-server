@@ -1,3 +1,11 @@
+SERVER ABANDONED
+============
+Project status: 
+  - terminated due to exceeding the deadline 
+Grading will be done manually. We will announce the criteria shortly.
+
+
+
 clash-server
 ============
 
