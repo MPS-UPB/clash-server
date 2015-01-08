@@ -13,7 +13,7 @@ Server for the 2014-2015 MPS project
 
 C++ Development
 ============
-For those of you writing in C++, you can extend the class Communication, from Client.
+For those of you writing in C++, you can extend the class Communication, from Client from Projects.
 
 Other Languages
 ============
